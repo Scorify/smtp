@@ -28,6 +28,17 @@ func Validate(config string) error {
 	return nil
 }
 
+// net/smtp does not allow you to send smtp.PlainAuth with not using TLS
+// This is able to trick net/smtp to always thinking you are authenticating over TLS
+type unencryptedAuth struct {
+	smtp.Auth
+}
+
+func (a unencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	server.TLS = true
+	return a.Auth.Start(server)
+}
+
 func Run(ctx context.Context, config string) error {
 	conf := Schema{}
 
